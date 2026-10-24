@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **`progress_entity`** — optional cycle progress (0-100 %). When set, the
+  "Current power" row and bar become a "Progress" row and bar. `power_entity` is
+  still used for running, paused and standby detection.
+
 - **`remaining_entity`** — optional generic remaining-time input for the ring and
   appliance display. Accepts numeric minutes, common Home Assistant duration
   units, an end timestamp, or `H:MM:SS`. If the entity is unavailable or cannot

@@ -39,6 +39,7 @@ class WashingMachineCard extends HTMLElement {
             state_running: "Washing", state_idle: "Idle", state_paused: "Paused", state_off: "Off", state_standby: "Standby", state_nodata: "No data",
             ring_running: "ELAPSED", ring_idle: "IDLE", ring_paused: "PAUSED", ring_off: "OFF", ring_standby: "STANDBY", remaining: "REMAINING",
             power: "Current power", current: "Current draw",
+            progress: "Progress",
             last_cycle: "LAST CYCLE", start: "START", duration: "DURATION",
             energy: "ENERGY", cost: "COST",
             min: "min", kwh: "kWh", kw: "kW",
@@ -63,6 +64,7 @@ class WashingMachineCard extends HTMLElement {
             state_running: "Идёт стирка", state_idle: "Ожидание", state_paused: "Пауза", state_off: "Выключено", state_standby: "Режим ожидания", state_nodata: "Нет данных",
             ring_running: "ПРОШЛО", ring_idle: "ОЖИДАНИЕ", ring_paused: "ПАУЗА", ring_off: "ВЫКЛ", ring_standby: "ОЖИДАНИЕ", remaining: "ОСТАЛОСЬ",
             power: "Текущая мощность", current: "Текущий ток",
+            progress: "Прогресс",
             last_cycle: "ПОСЛЕДНИЙ ЦИКЛ", start: "СТАРТ", duration: "ДЛИТЕЛЬН.",
             energy: "РАСХОД", cost: "СТОИМОСТЬ",
             min: "мин", kwh: "кВт·ч", kw: "кВт",
@@ -86,6 +88,7 @@ class WashingMachineCard extends HTMLElement {
             state_running: "Läuft", state_idle: "Bereit", state_paused: "Pause", state_off: "Aus", state_standby: "Standby", state_nodata: "Keine Daten",
             ring_running: "VERGANGEN", ring_idle: "BEREIT", ring_paused: "PAUSE", ring_off: "AUS", ring_standby: "STANDBY", remaining: "RESTZEIT",
             power: "Aktuelle Leistung", current: "Stromaufnahme",
+            progress: "Fortschritt",
             last_cycle: "LETZTER DURCHGANG", start: "START", duration: "DAUER",
             energy: "VERBRAUCH", cost: "KOSTEN",
             min: "Min", kwh: "kWh", kw: "kW",
@@ -109,6 +112,7 @@ class WashingMachineCard extends HTMLElement {
             state_running: "Lavage en cours", state_idle: "En veille", state_paused: "En pause", state_off: "Éteint", state_standby: "En veille", state_nodata: "Pas de données",
             ring_running: "ÉCOULÉ", ring_idle: "VEILLE", ring_paused: "PAUSE", ring_off: "ÉTEINT", ring_standby: "VEILLE", remaining: "RESTANT",
             power: "Puissance actuelle", current: "Courant instantané",
+            progress: "Progression",
             last_cycle: "DERNIER CYCLE", start: "DÉPART", duration: "DURÉE",
             energy: "ÉNERGIE", cost: "COÛT",
             min: "min", kwh: "kWh", kw: "kW",
@@ -133,6 +137,7 @@ class WashingMachineCard extends HTMLElement {
             state_running: "Wast", state_idle: "Inactief", state_paused: "Gepauzeerd", state_off: "Uit", state_standby: "Stand-by", state_nodata: "Geen data",
             ring_running: "VERSTREKEN", ring_idle: "INACTIEF", ring_paused: "GEPAUZEERD", ring_off: "UIT", ring_standby: "STAND-BY", remaining: "RESTEREND",
             power: "Huidig vermogen", current: "Huidig verbruik",
+            progress: "Voortgang",
             last_cycle: "LAATSTE CYCLUS", start: "START", duration: "DUUR",
             energy: "ENERGIE", cost: "KOSTEN",
             min: "min", kwh: "kWh", kw: "kW",
@@ -157,6 +162,7 @@ class WashingMachineCard extends HTMLElement {
             state_running: "Lavando", state_idle: "Em espera", state_paused: "Em pausa", state_off: "Desligado", state_standby: "Em espera", state_nodata: "Sem dados",
             ring_running: "DECORRIDO", ring_idle: "EM ESPERA", ring_paused: "EM PAUSA", ring_off: "DESLIGADO", ring_standby: "EM ESPERA", remaining: "RESTANTE",
             power: "Potência atual", current: "Corrente atual",
+            progress: "Progresso",
             last_cycle: "ÚLTIMO CICLO", start: "INÍCIO", duration: "DURAÇÃO",
             energy: "ENERGIA", cost: "CUSTO",
             min: "min", kwh: "kWh", kw: "kW",
@@ -466,6 +472,15 @@ class WashingMachineCard extends HTMLElement {
             return Math.max(0, (end.getTime() - Date.now()) / 60000);
 
         return null;
+    }
+
+    // Cycle progress as 0-100, or null when the entity is missing or not numeric.
+    _progressPercent() {
+        const entity = this._st(this._config.progress_entity);
+        const value = Number(String(entity?.state ?? "").trim().replace(",", "."));
+        if (!entity || entity.state === "" || !Number.isFinite(value))
+            return null;
+        return Math.min(100, Math.max(0, value));
     }
 
     _fmtRemaining(minutes) {
@@ -1410,6 +1425,7 @@ class WashingMachineCard extends HTMLElement {
           background: linear-gradient(90deg, #ff6a5e, #d93025);
           transition: width .6s ease;
         }
+        .bar-fill.progress { background: linear-gradient(90deg, #4cd98a, #22b263); }
         .idle .bar-fill { background: var(--wm-bar-idle); }
         .lc-title {
           font-size: 11px; font-weight: 800; letter-spacing: 1.4px; color: var(--wm-label);
@@ -1500,8 +1516,8 @@ class WashingMachineCard extends HTMLElement {
 
         const mi = (ent) => () => this._moreInfo(ent);
         this._el("chartBtn").addEventListener("click", mi(c.power_entity || c.status_entity));
-        if (c.power_entity)
-            this._el("powerValue").addEventListener("click", mi(c.power_entity));
+        if (c.progress_entity || c.power_entity)
+            this._el("powerValue").addEventListener("click", mi(c.progress_entity || c.power_entity));
         if (c.notify_entity)
             this._el("notifyBtn").addEventListener("click", () => this._toggle(c.notify_entity));
         if (c.plug_entity)
@@ -1594,8 +1610,17 @@ class WashingMachineCard extends HTMLElement {
         this._el("lcEnergyLabel").textContent = t.energy;
         this._el("lcCostLabel").textContent = t.cost;
 
-        if (c.power_entity) {
+        if (c.progress_entity) {
+            const pct = active ? this._progressPercent() : null;
+            this._el("powerRow").classList.remove("hidden");
+            this._el("bar").classList.remove("hidden");
+            this._el("powerLabel").textContent = t.progress;
+            this._el("powerValue").textContent = pct === null ? "—" : `${Math.round(pct)} %`;
+            this._el("barFill").style.width = `${pct ?? 0}%`;
+            this._el("barFill").classList.add("progress");
+        } else if (c.power_entity) {
             const ps = this._st(c.power_entity);
+            this._el("barFill").classList.remove("progress");
             const p = parseFloat(ps?.state);
             const unit = ps?.attributes?.unit_of_measurement || "W";
             this._el("powerRow").classList.remove("hidden");
@@ -1973,6 +1998,16 @@ class WashingMachineCardEditor extends HTMLElement {
                         selector: {
                             entity: {
                                 domain: ["sensor", "input_number", "input_datetime"]
+                            }
+                        },
+                    }, {
+                        key: "progress_entity",
+                        kind: "entity",
+                        title: "Progress entity",
+                        description: "Optional. Cycle progress as a percentage (0-100). When set, the power bar becomes a progress bar.",
+                        selector: {
+                            entity: {
+                                domain: ["sensor", "input_number"]
                             }
                         },
                     }, {
@@ -2567,6 +2602,7 @@ image_tap_action:                           # optional: what tapping the illustr
   navigation_path: /lovelace/laundry
 power_entity: sensor.washing_machine_power
 remaining_entity: sensor.washing_machine_remaining_time  # optional: minutes, end timestamp, or H:MM:SS
+progress_entity: sensor.washing_machine_progress  # optional: 0-100 %, turns the power bar into a progress bar
 power_threshold: 10
 standby_threshold: 1                        # optional: no cycle but power above this (W) shows STANDBY
 power_max: 2500

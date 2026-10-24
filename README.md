@@ -107,6 +107,7 @@ image_tap_action:                                  # tap on the illustration (op
   navigation_path: /lovelace/laundry
 power_entity: sensor.washing_machine_power         # gauge + running detection
 remaining_entity: sensor.washing_machine_remaining_time # optional remaining time / end time source
+progress_entity: sensor.washing_machine_progress       # optional 0-100 %: the power bar becomes a progress bar
 power_threshold: 10                                # running above this value
 standby_threshold: 1                               # optional: appliance left on, no cycle → STANDBY
 power_max: 2500                                    # gauge maximum
@@ -133,6 +134,7 @@ theme: auto                                        # auto / light / dark / ha
 | `image_tap_action` | no | — | What tapping the appliance illustration does, using Home Assistant's standard [actions](https://www.home-assistant.io/dashboards/actions/): `navigate`, `url`, `more-info`, `perform-action` and so on. Not set: tapping the illustration does nothing. |
 | `power_entity` | no | — | Power (W) or current (A) sensor: red gauge, value display, and it tells a running cycle from a paused one — see `power_threshold`. |
 | `remaining_entity` | no | — | Optional remaining-time source. Accepts numeric minutes, common duration units, an end timestamp, or `H:MM:SS`. While a cycle is active, a valid value replaces elapsed time in the ring and appliance display. Invalid/unavailable values fall back to elapsed time. |
+| `progress_entity` | no | — | Optional cycle progress as a percentage (0–100), e.g. WashData's progress sensor. When set, the "Current power" row and bar become a "Progress" row and bar, shown while a cycle is active (otherwise `—` and an empty bar). Values are clamped to 0–100; unavailable or non-numeric values show `—`. `power_entity` still drives running/paused/standby detection. |
 | `power_threshold` | no | `10` | With a `power_entity`, a cycle that is under way but drawing less than this shows as **paused** rather than running. Without one the card cannot tell the two apart, and `status_entity` alone decides. |
 | `standby_threshold` | no | — | With a `power_entity`: when no cycle is running but the appliance still draws more than this (W), the card shows **standby** instead of off — handy when the plug stays on and the machine has not been switched off after the cycle. Set it just above what your plug reports with the appliance off (often `0`–`1`). Not set: no standby state. |
 | `power_max` | no | `2500` | Gauge maximum, in `power_entity` units. |
